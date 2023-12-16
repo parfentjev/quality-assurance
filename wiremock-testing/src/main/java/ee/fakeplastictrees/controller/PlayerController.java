@@ -6,38 +6,36 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static io.restassured.RestAssured.given;
 
 @RestController
+@RequestMapping("/play")
 public class PlayerController {
-    @Value("${externalServiceUrl}")
-    private String externalServiceUrl;
+    @Value("${dataServiceUrl}")
+    private String dataServiceUrl;
 
-    @PostMapping(value = "/playPositive")
-    public ResponseEntity<Void> playPositive(@RequestBody SongDto songDto) {
-        request(songDto)
-                .post("/play")
-                .then()
-                .statusCode(200);
+    @PostMapping(value = "/")
+    public ResponseEntity<Void> play(@RequestBody SongDto songDto) {
+        int statusCode = request(songDto)
+                .post("/store")
+                .statusCode();
 
+        return ResponseEntity.status(statusCode).build();
+    }
+
+    @PostMapping("/no-call")
+    public ResponseEntity<Void> noCall(@RequestBody SongDto songDto) {
         return ResponseEntity.status(200).build();
     }
 
-    @PostMapping("/playNegativeNoCall")
-    public ResponseEntity<Void> playNegativeNoCall(@RequestBody SongDto songDto) {
-        return ResponseEntity.status(200).build();
-    }
-
-    @PostMapping("/playNegativeWrongData")
-    public ResponseEntity<Void> playNegativeWrongData(@RequestBody SongDto songDto) {
+    @PostMapping("/wrong-data")
+    public ResponseEntity<Void> wrongData(@RequestBody SongDto songDto) {
         SongDto modifiedSongDto = new SongDto("Placebo", songDto.title(), songDto.duration(), SongQuality.MP3);
 
         request(modifiedSongDto)
-                .post("/play")
+                .post("/store")
                 .then()
                 .statusCode(200);
 
@@ -46,7 +44,7 @@ public class PlayerController {
 
     private RequestSpecification request(SongDto body) {
         return given()
-                .baseUri(externalServiceUrl)
+                .baseUri(dataServiceUrl)
                 .contentType(ContentType.JSON)
                 .body(body);
     }
