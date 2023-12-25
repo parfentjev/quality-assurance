@@ -1,24 +1,16 @@
 version: '3.1'
 
 services:
-  wiremock:
-    container_name: stub
-    image: wiremock/wiremock:3.3.1
-    networks:
-      - api-testing
-
-  api:
-    container_name: service
+  banking:
+    container_name: banking-service
     build: .
-    depends_on:
-      - wiremock
-    volumes:
-      - /home/aleksei/Downloads/docker/:/service/build/reports/
     networks:
-      - api-testing
-    env_file:
-      - .env
+      - banking
+    environment:
+      - ATC_SERVICE_URL=https://api.police.gov
+    ports:
+      - "8080:8080"
 
 networks:
-  api-testing:
+  banking:
     driver: bridge

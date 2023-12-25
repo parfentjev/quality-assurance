@@ -1,81 +1,81 @@
 package ee.fakeplastictrees.test;
 
+import ee.fakeplastictrees.test.model.TransferRequest;
+import ee.fakeplastictrees.test.model.TransferResponse;
+import io.restassured.http.ContentType;
+import org.testng.annotations.Test;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.testng.Assert.*;
 
-import ee.fakeplastictrees.test.model.TransferRequest;
-import ee.fakeplastictrees.test.model.TransferResponse;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
-import java.math.BigDecimal;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 public class OperationsControllerTest extends AbstractWireMockTest {
-  @BeforeMethod
-  public void resetStubs() {
-    reset();
-  }
+    @Test
+    public void transferPositive() {
+        var response = aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBodyFile("responsePositive.json");
 
-  @Test
-  public void transferPositive() {
-    var atcResponse = "{\"result\":\"POSITIVE\"}";
-    stubFor(post("/ats").willReturn(okJson(atcResponse)));
+        stubFor(post("/atc").willReturn(response));
 
-    var requestedBody = requestBody();
-    var transferResponse =
-        requestSpecification(requestedBody)
-            .post("/transfer")
-            .then()
-            .statusCode(200)
-            .extract()
-            .as(TransferResponse.class);
+        var transferRequest = transferRequestBody();
+        var transferResponse = postOperationsTransfer(transferRequest);
 
-    var expectedJson = "{\"type\": \"IBAN\", \"identifier\": \"NL43INGB3831267707\"}";
-    verify(exactly(1), postRequestedFor(urlEqualTo("/ats")));
-    verify(postRequestedFor(urlEqualTo("/ats")).withRequestBody(equalToJson(expectedJson)));
+        verify(exactly(1), postRequestedFor(urlEqualTo("/atc")));
+        verify(postRequestedFor(urlEqualTo("/atc"))
+                .withRequestBody(matchingJsonPath("$.type", equalTo("IBAN")))
+                .withRequestBody(matchingJsonPath("$.identifier", equalTo(transferRequest.recipientAccount()))));
 
-    assertTrue(transferResponse.completed());
-    assertNull(transferResponse.message());
-  }
+        assertTrue(transferResponse.completed());
+        assertNull(transferResponse.message());
+    }
 
-  @Test
-  public void transferNegative() {
-    var atcResponse = "{\"result\":\"NEGATIVE\",\"score\":\"0.75\"}";
-    stubFor(post("/ats").willReturn(okJson(atcResponse)));
+    @Test
+    public void transferNegative() {
+        var response = aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBodyFile("responseNegative.json");
 
-    var requestedBody = requestBody();
-    var transferResponse =
-        requestSpecification(requestedBody)
-            .post("/transfer")
-            .then()
-            .statusCode(200)
-            .extract()
-            .as(TransferResponse.class);
+        stubFor(post("/atc").willReturn(response));
 
-    var expectedJson = "{\"type\": \"IBAN\", \"identifier\": \"NL43INGB3831267707\"}";
-    verify(exactly(1), postRequestedFor(urlEqualTo("/ats")));
-    verify(postRequestedFor(urlEqualTo("/ats")).withRequestBody(equalToJson(expectedJson)));
+        var transferRequest = transferRequestBody();
+        var transferResponse = postOperationsTransfer(transferRequest);
 
-    assertFalse(transferResponse.completed());
-    assertEquals(transferResponse.message(), "Anti-terrorism check has failed with score=0.75");
-  }
+        verify(exactly(1), postRequestedFor(urlEqualTo("/atc")));
+        verify(postRequestedFor(urlEqualTo("/atc"))
+                .withRequestBody(matchingJsonPath("$.type", equalTo("IBAN")))
+                .withRequestBody(matchingJsonPath("$.identifier", equalTo(transferRequest.recipientAccount()))));
 
-  private TransferRequest requestBody() {
-    return new TransferRequest(
-        format("%s %s", randomAlphabetic(5), randomAlphabetic(10)),
-        "NL43INGB3831267707",
-        BigDecimal.valueOf(123.45),
-        randomAlphabetic(25));
-  }
+        assertFalse(transferResponse.completed());
+        assertEquals(transferResponse.message(), "Anti-terrorism check has failed with score=0.75");
+    }
 
-  private RequestSpecification requestSpecification(TransferRequest body) {
-    return given()
-        .baseUri("http://localhost:8080/operations")
-        .contentType(ContentType.JSON)
-        .body(body);
-  }
+    private TransferRequest transferRequestBody() {
+        return new TransferRequest(
+                format("%s %s", randomAlphabetic(5), randomAlphabetic(10)),
+                "NL43INGB3831267707",
+                BigDecimal.valueOf(123.45),
+                randomAlphabetic(25));
+    }
+
+    private TransferResponse postOperationsTransfer(TransferRequest body) {
+        var baseUri = Optional.ofNullable(System.getenv("BANKING_SERVICE_URL")).orElse("http://localhost:8080");
+
+        return given()
+                .baseUri(baseUri)
+                .contentType(ContentType.JSON)
+                .body(body)
+                .post("/operations/transfer")
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(TransferResponse.class);
+    }
 }
