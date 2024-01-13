@@ -1,6 +1,6 @@
 WireMock is a tool for building mock APIs: https://wiremock.org/
 
-Here's a blog post about this project: TODO.
+Here's a blog post about this project: [https://fakeplastictrees.ee/post/9b3a4a8e-7973-4b7e-a8aa-c438a5722397](https://fakeplastictrees.ee/post/9b3a4a8e-7973-4b7e-a8aa-c438a5722397/how-test-engineers-can-use-wiremock-to-substitute-external-services)
 
 # Usage
 
