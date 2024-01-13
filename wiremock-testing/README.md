@@ -4,7 +4,7 @@ Here's a blog post about this project: TODO.
 
 # Usage
 
-Run the server separately in its production configuration:
+Run the server separately in its release configuration:
 
 ```shell
 docker-compose up -d --build
@@ -14,6 +14,13 @@ Run the server in its test configuration along with the tests:
 
 ```shell
 docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
+```
+
+Don't forget to change this path `/home/aleksei/Documents/DockerVolume/` in the `docker-compose.test.yml` file to map test results to your host:
+
+```yaml
+volumes:
+  - /home/aleksei/Documents/DockerVolume/:/src/testing/build/reports/
 ```
 
 # Useful links
