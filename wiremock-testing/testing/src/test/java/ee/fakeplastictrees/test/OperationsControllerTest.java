@@ -2,11 +2,11 @@ package ee.fakeplastictrees.test;
 
 import ee.fakeplastictrees.test.model.TransferRequest;
 import ee.fakeplastictrees.test.model.TransferResponse;
+import ee.fakeplastictrees.test.util.Config;
 import io.restassured.http.ContentType;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.restassured.RestAssured.given;
@@ -30,7 +30,8 @@ public class OperationsControllerTest extends AbstractWireMockTest {
         verify(exactly(1), postRequestedFor(urlEqualTo("/atc")));
         verify(postRequestedFor(urlEqualTo("/atc"))
                 .withRequestBody(matchingJsonPath("$.type", equalTo("IBAN")))
-                .withRequestBody(matchingJsonPath("$.identifier", equalTo(transferRequest.recipientAccount()))));
+                .withRequestBody(matchingJsonPath("$.identifier",
+                        equalTo(transferRequest.recipientAccount()))));
 
         assertTrue(transferResponse.completed());
         assertNull(transferResponse.message());
@@ -51,7 +52,8 @@ public class OperationsControllerTest extends AbstractWireMockTest {
         verify(exactly(1), postRequestedFor(urlEqualTo("/atc")));
         verify(postRequestedFor(urlEqualTo("/atc"))
                 .withRequestBody(matchingJsonPath("$.type", equalTo("IBAN")))
-                .withRequestBody(matchingJsonPath("$.identifier", equalTo(transferRequest.recipientAccount()))));
+                .withRequestBody(matchingJsonPath("$.identifier",
+                        equalTo(transferRequest.recipientAccount()))));
 
         assertFalse(transferResponse.completed());
         assertEquals(transferResponse.message(), "Anti-terrorism check has failed with score=0.75");
@@ -66,10 +68,8 @@ public class OperationsControllerTest extends AbstractWireMockTest {
     }
 
     private TransferResponse postOperationsTransfer(TransferRequest body) {
-        var baseUri = Optional.ofNullable(System.getenv("BANKING_SERVICE_URL")).orElse("http://localhost:8080");
-
         return given()
-                .baseUri(baseUri)
+                .baseUri(Config.BANK_API_URL)
                 .contentType(ContentType.JSON)
                 .body(body)
                 .post("/operations/transfer")

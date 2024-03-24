@@ -4,24 +4,13 @@ Here's a blog post about this project: [https://fakeplastictrees.ee/post/9b3a4a8
 
 # Usage
 
-Run the server separately in its release configuration:
+To start the service and execute all tests against it, simply run:
 
 ```shell
-docker-compose up -d --build
+make test
 ```
 
-Run the server in its test configuration along with the tests:
-
-```shell
-docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d --build
-```
-
-Don't forget to change this path `/home/aleksei/Documents/DockerVolume/` in the `docker-compose.test.yml` file to map test results to your host:
-
-```yaml
-volumes:
-  - /home/aleksei/Documents/DockerVolume/:/src/testing/build/reports/
-```
+Once it's completed, find the test report here: `reports/tests/test/index.html`.
 
 # Useful links
 

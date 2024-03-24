@@ -1,16 +1,18 @@
 version: '3.1'
 
 services:
-  banking:
-    container_name: banking-service
+  bank-api:
     build: .
-    networks:
-      - banking
-    environment:
-      - ATC_SERVICE_URL=https://api.police.gov
-    ports:
-      - "8080:8080"
+    command: ["java", "-jar", "service/build/libs/service-1.0-SNAPSHOT.jar"]
+    env_file:
+      - .env
 
-networks:
-  banking:
-    driver: bridge
+  tests:
+    build: .
+    command: ["./gradlew", "test"]
+    env_file:
+      - .env
+    volumes:
+      - ./reports/:/src/testing/build/reports/
+    depends_on:
+      - bank-api

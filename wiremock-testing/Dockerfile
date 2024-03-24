@@ -3,12 +3,9 @@ WORKDIR /src
 
 COPY ./gradle ./gradle
 COPY ./service ./service
+COPY ./testing ./testing
 COPY ./build.gradle ./build.gradle
 COPY ./settings.gradle ./settings.gradle
 COPY ./gradlew ./gradlew
 
-ARG ATC_SERVICE_URL
-ENV ATC_SERVICE_URL=$ATC_SERVICE_URL
-
-RUN ./gradlew :service:build -x test
-CMD ["java", "-jar", "service/build/libs/service-1.0-SNAPSHOT.jar"]
+RUN ./gradlew build -x test
